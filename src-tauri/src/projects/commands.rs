@@ -5763,6 +5763,7 @@ pub async fn create_commit_with_ai(
     model: Option<String>,
     custom_profile_name: Option<String>,
     reasoning_effort: Option<String>,
+    include_ai_co_author: Option<bool>,
 ) -> Result<CreateCommitResponse, String> {
     log::trace!("Creating commit for: {worktree_path}");
 
@@ -5842,12 +5843,34 @@ pub async fn create_commit_with_ai(
         response.message.lines().next().unwrap_or("")
     );
 
-    // 7. Create the commit
-    let commit_hash = create_git_commit(&worktree_path, &response.message)?;
+    // 7. Get include_ai_co_author from preferences if not provided
+    let include_co_author = include_ai_co_author.unwrap_or_else(|| {
+        crate::get_preferences_path(&app)
+            .ok()
+            .and_then(|p| std::fs::read_to_string(p).ok())
+            .and_then(|c| serde_json::from_str::<crate::AppPreferences>(&c).ok())
+            .map(|p| p.include_ai_co_author)
+            .unwrap_or(false) // Default to false (human only)
+    });
+
+    // 8. Filter out Co-Authored-By lines if not wanted
+    let commit_message = if include_co_author {
+        response.message
+    } else {
+        response
+            .message
+            .lines()
+            .filter(|line| !line.trim().starts_with("Co-Authored-By:"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    // 9. Create the commit
+    let commit_hash = create_git_commit(&worktree_path, &commit_message)?;
 
     log::trace!("Created commit: {commit_hash}");
 
-    // 8. Push if requested
+    // 10. Push if requested
     let (pushed, push_fell_back, push_permission_denied) = if push {
         let (fell_back, perm_denied) =
             push_for_commit(&app, &worktree_path, remote.as_deref(), pr_number)?;
@@ -5859,7 +5882,7 @@ pub async fn create_commit_with_ai(
 
     Ok(CreateCommitResponse {
         commit_hash,
-        message: response.message,
+        message: commit_message,
         pushed,
         push_fell_back,
         push_permission_denied,

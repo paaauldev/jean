@@ -343,6 +343,7 @@ export function MagicModal() {
                 preferences?.default_provider
               ),
               reasoningEffort: preferences?.magic_prompt_efforts?.commit_message_effort ?? null,
+              includeAiCoAuthor: preferences?.include_ai_co_author ?? false,
             }
           )
           triggerImmediateGitPoll()

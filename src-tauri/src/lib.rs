@@ -161,6 +161,8 @@ pub struct AppPreferences {
     #[serde(default = "default_auto_archive_on_pr_merged")]
     pub auto_archive_on_pr_merged: bool, // Auto-archive worktrees when their PR is merged
     #[serde(default)]
+    pub include_ai_co_author: bool, // Include AI as co-author in commit messages (default: false - human only)
+    #[serde(default)]
     pub debug_mode_enabled: bool, // Show debug panel in chat sessions (default: false)
     #[serde(default)]
     pub default_enabled_mcp_servers: Vec<String>, // MCP server names enabled by default (empty = none)
@@ -1083,6 +1085,7 @@ impl Default for AppPreferences {
             removal_behavior: default_removal_behavior(),
             auto_pull_base_branch: default_auto_pull_base_branch(),
             auto_archive_on_pr_merged: default_auto_archive_on_pr_merged(),
+            include_ai_co_author: false, // Default: human only
             debug_mode_enabled: false,
             default_effort_level: default_effort_level(),
             default_enabled_mcp_servers: Vec::new(),

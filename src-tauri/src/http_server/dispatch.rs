@@ -274,6 +274,8 @@ pub async fn dispatch_command(
                 field_opt(&args, "customProfileName", "custom_profile_name")?;
             let reasoning_effort: Option<String> =
                 field_opt(&args, "reasoningEffort", "reasoning_effort")?;
+            let include_ai_co_author: Option<bool> =
+                field_opt(&args, "includeAiCoAuthor", "include_ai_co_author")?;
             let result = crate::projects::create_commit_with_ai(
                 app.clone(),
                 worktree_path,
@@ -284,6 +286,7 @@ pub async fn dispatch_command(
                 model,
                 custom_profile_name,
                 reasoning_effort,
+                include_ai_co_author,
             )
             .await?;
             to_value(result)
